@@ -44,25 +44,25 @@ jobs:
 
       - name: Build and Zip Python Release (Windows)
         run: |
-          dotnet publish src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./ReleasePrep/Win
+          dotnet publish src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o ./ReleasePrep/Win
           cp ./ReleasePrep/SharedPython/* ./ReleasePrep/Win/
           cd ./ReleasePrep/Win && zip -r ../../ForagingEnv-Python-Windows.zip .
 
       - name: Build and Zip Python Release (Mac M1/M2)
         run: |
-          dotnet publish src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -o ./ReleasePrep/MacM1
+          dotnet publish src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o ./ReleasePrep/MacM1
           cp ./ReleasePrep/SharedPython/* ./ReleasePrep/MacM1/
           cd ./ReleasePrep/MacM1 && zip -r ../../ForagingEnv-Python-Mac-Arm64.zip .
 
       - name: Build and Zip Python Release (Mac Intel)
         run: |
-          dotnet publish src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true -o ./ReleasePrep/MacIntel
+          dotnet publish src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o ./ReleasePrep/MacIntel
           cp ./ReleasePrep/SharedPython/* ./ReleasePrep/MacIntel/
           cd ./ReleasePrep/MacIntel && zip -r ../../ForagingEnv-Python-Mac-x64.zip .
 
       - name: Build and Zip Python Release (Linux)
         run: |
-          dotnet publish src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o ./ReleasePrep/Linux
+          dotnet publish src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o ./ReleasePrep/Linux
           cp ./ReleasePrep/SharedPython/* ./ReleasePrep/Linux/
           cd ./ReleasePrep/Linux && zip -r ../../ForagingEnv-Python-Linux.zip .
 
