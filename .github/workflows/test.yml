@@ -47,4 +47,4 @@ jobs:
     
     - name: Run Python Integration Tests
       run: |
-        pytest tests/PythonIntegration/test_python_agent.py
+        pytest tests/PythonIntegration/test_python_agent.py --server-bin=./src/LevelBasedForaging.GrpcServer/bin/Release/net10.0/LevelBasedForaging.GrpcServer
