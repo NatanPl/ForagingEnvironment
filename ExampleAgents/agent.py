@@ -13,10 +13,9 @@ argument_parser = ArgumentParser()
 ### C# environment arguments
 if sys.platform.startswith("win"):
     default_executable = "./ForagingEnv.exe"
-elif sys.platform == "darwin":
-    default_executable = "./ForagingEnv_mac"
 else:
     default_executable = "./ForagingEnv"
+
 argument_parser.add_argument("--executable", type=str, default=default_executable)
 argument_parser.add_argument("--address", type=str, default="localhost")
 argument_parser.add_argument("--port", type=int, default=50051)
