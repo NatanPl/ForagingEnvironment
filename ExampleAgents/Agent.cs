@@ -6,7 +6,11 @@ namespace Agent {
     public class ExampleAgent : IAgent {
         private readonly Random random = new Random();
         private readonly int agentCount = 0;
-        public ExampleAgent(int agentCount = 0) {
+        private readonly int width = 0;
+        private readonly int height = 0;
+        public ExampleAgent(int width, int height, int agentCount = 0) {
+            this.width = width;
+            this.height = height;
             this.agentCount = agentCount;
         }
         public List<AgentAction> GetActions(State observation) {
@@ -21,7 +25,7 @@ namespace Agent {
         static void Main(string[] args) {
             int agents = 5, objects = 10, width = 5, height = 5;
             var env = new ForagingEnvironment(height, width, objects, agents);
-            var agent = new ExampleAgent(agents);
+            var agent = new ExampleAgent(width, height, agents);
 
             for (int episode = 0; episode < 100; episode++) {
                 var state = env.Reset();

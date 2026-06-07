@@ -59,7 +59,7 @@ jobs:
       - name: Build and Zip Python Release (Mac Intel)
         run: |
           dotnet publish src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true -p:DebugType=None -p:DebugSymbols=false -o ./ReleasePrep/MacIntel
-            mv ./ReleasePrep/MacIntel/LevelBasedForaging.GrpcServer ./ReleasePrep/MacIntel/ForagingEnv
+          mv ./ReleasePrep/MacIntel/LevelBasedForaging.GrpcServer ./ReleasePrep/MacIntel/ForagingEnv
           cp ./ReleasePrep/SharedPython/* ./ReleasePrep/MacIntel/
           cd ./ReleasePrep/MacIntel && zip -r ../../ForagingEnv-Python-Mac-x64.zip .
 

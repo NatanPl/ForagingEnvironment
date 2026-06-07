@@ -8,7 +8,7 @@ namespace LevelBasedForaging.Tests {
         public void ExampleAgent_CanCompleteFullEpisodeWithoutCrashing() {
             int w = 5, h = 5, objects = 10, agents = 5;
             var env = new ForagingEnvironment(h, w, objects, agents);
-            var agent = new ExampleAgent(agents);
+            var agent = new ExampleAgent(w, h, agents);
             
             var state = env.Reset();
             int maxSteps = 500;
