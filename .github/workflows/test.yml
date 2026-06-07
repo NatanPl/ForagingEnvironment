@@ -9,6 +9,8 @@ on:
     branches: [ "main" ]
     paths: ['**.cs', '**.sln', '**.csproj', '**.proto']
 
+  workflow_dispatch:
+
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
