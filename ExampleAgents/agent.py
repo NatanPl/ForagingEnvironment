@@ -29,7 +29,9 @@ argument_parser.add_argument("--num_episodes", type=int, default=5)
 
 
 class RandomPythonAgent:
-    def __init__(self, num_agents):
+    def __init__(self, width, height, num_agents):
+        self.width = width
+        self.height = height
         self.num_agents = num_agents
 
     def get_actions(self, state):
@@ -64,7 +66,7 @@ def main(args):
         channel = grpc.insecure_channel(args.address + ":" + str(args.port))
         env = foraging_pb2_grpc.ForagingServiceStub(channel)
 
-        agent = RandomPythonAgent(num_agents=args.num_agents)
+        agent = RandomPythonAgent(args.width, args.height, args.num_agents)
 
         for episode in range(args.num_episodes):
             state = env.Reset(foraging_pb2.Empty())

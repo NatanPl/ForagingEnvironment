@@ -28,7 +28,7 @@ def test_python_grpc_loop_execution(server_bin_path):
         channel = grpc.insecure_channel("localhost:50051")
         env = foraging_pb2_grpc.ForagingServiceStub(channel)
 
-        agent = RandomPythonAgent(num_agents=5)
+        agent = RandomPythonAgent(5, 5, num_agents=5)
 
         state = env.Reset(foraging_pb2.Empty())
         assert len(state.agent_locations) == 5

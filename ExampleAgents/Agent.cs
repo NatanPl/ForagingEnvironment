@@ -8,7 +8,7 @@ namespace Agent {
         private readonly int agentCount = 0;
         private readonly int width = 0;
         private readonly int height = 0;
-        public ExampleAgent(int width, int height, int agentCount = 0) {
+        public ExampleAgent(int width, int height, int agentCount) {
             this.width = width;
             this.height = height;
             this.agentCount = agentCount;
