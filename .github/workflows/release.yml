@@ -1,0 +1,102 @@
+name: Build and Publish Releases
+
+on:
+    workflow_dispatch:
+    
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v6
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v5
+        with:
+          dotnet-version: '10.0.x'
+
+      - name: Setup Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.14'
+
+      - name: Install Python Tools
+        run: python -m pip install grpcio-tools
+
+      - name: Generate Protobufs
+        run: |
+          mkdir -p ./ReleasePrep/SharedPython
+          python -m grpc_tools.protoc -I./src/LevelBasedForaging.GrpcServer/Protos \
+            --python_out=./ReleasePrep/SharedPython \
+            --grpc_python_out=./ReleasePrep/SharedPython \
+            ./src/LevelBasedForaging.GrpcServer/Protos/foraging.proto
+          
+          cp ExampleAgents/agent.py ./ReleasePrep/SharedPython/
+          cp ExampleAgents/requirements.txt ./ReleasePrep/SharedPython/
+
+      - name: Build and Zip Python Release (Windows)
+        run: |
+          dotnet publish src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o ./ReleasePrep/Win
+          cp ./ReleasePrep/SharedPython/* ./ReleasePrep/Win/
+          cd ./ReleasePrep/Win && zip -r ../../ForagingEnv-Python-Windows.zip .
+
+      - name: Build and Zip Python Release (Mac M1/M2)
+        run: |
+          dotnet publish src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -o ./ReleasePrep/MacM1
+          cp ./ReleasePrep/SharedPython/* ./ReleasePrep/MacM1/
+          cd ./ReleasePrep/MacM1 && zip -r ../../ForagingEnv-Python-Mac-Arm64.zip .
+
+      - name: Build and Zip Python Release (Mac Intel)
+        run: |
+          dotnet publish src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true -o ./ReleasePrep/MacIntel
+          cp ./ReleasePrep/SharedPython/* ./ReleasePrep/MacIntel/
+          cd ./ReleasePrep/MacIntel && zip -r ../../ForagingEnv-Python-Mac-x64.zip .
+
+      - name: Build and Zip Python Release (Linux)
+        run: |
+          dotnet publish src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o ./ReleasePrep/Linux
+          cp ./ReleasePrep/SharedPython/* ./ReleasePrep/Linux/
+          cd ./ReleasePrep/Linux && zip -r ../../ForagingEnv-Python-Linux.zip .
+
+      - name: Build and Zip C# Release
+        run: |
+          mkdir -p ./ReleasePrep/CSharp
+          
+          dotnet build src/LevelBasedForaging.Core/LevelBasedForaging.Core.csproj -c Release
+          cp src/LevelBasedForaging.Core/bin/Release/net10.0/LevelBasedForaging.Core.dll ./ReleasePrep/CSharp/
+          
+          cp ExampleAgents/Agent.cs ./ReleasePrep/CSharp/
+          
+          cat << 'EOF' > ./ReleasePrep/CSharp/Agent.csproj
+          <Project Sdk="Microsoft.NET.Sdk">
+            <PropertyGroup>
+              <OutputType>Exe</OutputType>
+              <TargetFramework>net10.0</TargetFramework>
+              <ImplicitUsings>enable</ImplicitUsings>
+              <Nullable>enable</Nullable>
+            </PropertyGroup>
+            <ItemGroup>
+              <Reference Include="LevelBasedForaging.Core">
+                <HintPath>LevelBasedForaging.Core.dll</HintPath>
+              </Reference>
+            </ItemGroup>
+          </Project>
+          EOF
+          
+          cd ./ReleasePrep/CSharp && zip -r ../../ForagingEnv-CSharp.zip .
+
+      - name: Create Release and Upload Assets
+        uses: softprops/action-gh-release@v3
+        with:
+          files: |
+            ForagingEnv-Python-Windows.zip
+            ForagingEnv-Python-Mac-Arm64.zip
+            ForagingEnv-Python-Mac-x64.zip
+            ForagingEnv-Python-Linux.zip
+            ForagingEnv-CSharp.zip
+          draft: false
+          prerelease: false
+          generate_release_notes: true

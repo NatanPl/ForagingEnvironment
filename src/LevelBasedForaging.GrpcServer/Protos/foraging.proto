@@ -1,0 +1,29 @@
+syntax = "proto3";
+option csharp_namespace = "LevelBasedForaging.Grpc";
+
+service ForagingService {
+  rpc Reset (Empty) returns (StateMessage);
+  rpc Step (ActionRequest) returns (StepResponse);
+}
+
+message Empty {}
+
+message StateMessage {
+  repeated int32 world = 1; 
+  repeated Location agent_locations = 2;
+}
+
+message Location {
+  int32 x = 1;
+  int32 y = 2;
+}
+
+message ActionRequest {
+  repeated int32 actions = 1; // 0=North, 1=South, etc.
+}
+
+message StepResponse {
+  double reward = 1;
+  StateMessage next_state = 2;
+  bool done = 3;
+}

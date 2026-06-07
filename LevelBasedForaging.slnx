@@ -1,0 +1,12 @@
+<Solution>
+  <Folder Name="/ExampleAgents/">
+    <Project Path="ExampleAgents/Agent.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/LevelBasedForaging.Core/LevelBasedForaging.Core.csproj" />
+    <Project Path="src/LevelBasedForaging.GrpcServer/LevelBasedForaging.GrpcServer.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/LevelBasedForaging.Tests/LevelBasedForaging.Tests.csproj" />
+  </Folder>
+</Solution>
