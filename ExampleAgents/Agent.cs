@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
+using CommandLine;
 using LevelBasedForaging.Core;
 
 namespace Agent {
@@ -18,16 +20,34 @@ namespace Agent {
             return new List<AgentAction>(new AgentAction[count].Select(_ => (AgentAction)random.Next(0, 4)));
         }
         public void Reward(double reward) {}
+    }
 
+    public class Options {
+        [Option('a', "agents", Required = false, Default = 5, HelpText = "Number of foraging agents.")]
+        public int Agents { get; set; }
+        [Option('o', "objects", Required = false, Default = 10, HelpText = "Number of objects in the environment.")]
+        public int Objects { get; set; }
+        [Option('w', "width", Required = false, Default = 5, HelpText = "Width of the grid.")]
+        public int Width { get; set; }
+        [Option('h', "height", Required = false, Default = 5, HelpText = "Height of the grid.")]
+        public int Height { get; set; }
+        [Option('e', "episodes", Required = false, Default = 100, HelpText = "Number of episodes to simulate.")]
+        public int Episodes { get; set; }
     }
 
     class Program {
         static void Main(string[] args) {
-            int agents = 5, objects = 10, width = 5, height = 5;
-            var env = new ForagingEnvironment(height, width, objects, agents);
-            var agent = new ExampleAgent(width, height, agents);
+            Parser.Default.ParseArguments<Options>(args)
+                .WithParsed(RunSimulation);
+        }
+        static void RunSimulation(Options opts) {
+            Console.WriteLine($"Starting simulation with {opts.Agents} agents, {opts.Objects} objects, grid size {opts.Width}x{opts.Height}, for {opts.Episodes} episodes.");
+            
+            var env = new ForagingEnvironment(opts.Height, opts.Width, opts.Objects, opts.Agents);
+            var agent = new ExampleAgent(opts.Width, opts.Height, opts.Agents);
 
-            for (int episode = 0; episode < 100; episode++) {
+            var totalRewards = new List<double>();
+            for (int episode = 0; episode < opts.Episodes; episode++) {
                 var state = env.Reset();
                 double totalReward = 0;
 
@@ -39,7 +59,12 @@ namespace Agent {
                     state = stepResult.NextState;
                 }
                 Console.WriteLine($"Episode {episode + 1} finished with reward: {totalReward:F2}");
+                totalRewards.Add(totalReward);
             }
+            double averageReward = totalRewards.Average();
+            double maxReward = totalRewards.Max();
+            double minReward = totalRewards.Min();
+            Console.WriteLine($"Simulation completed. Average Reward: {averageReward:F2}, Max Reward: {maxReward:F2}, Min Reward: {minReward:F2}");
         }
     }
 }
