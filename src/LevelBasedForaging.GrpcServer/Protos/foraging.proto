@@ -9,13 +9,19 @@ service ForagingService {
 message Empty {}
 
 message StateMessage {
-  repeated int32 world = 1; 
-  repeated Location agent_locations = 2;
+  repeated Location agent_locations = 1;
+  repeated ObjectLocation object_locations = 2;
 }
 
 message Location {
   int32 x = 1;
   int32 y = 2;
+}
+
+message ObjectLocation {
+  int32 x = 1;
+  int32 y = 2;
+  int32 level = 3;
 }
 
 message ActionRequest {

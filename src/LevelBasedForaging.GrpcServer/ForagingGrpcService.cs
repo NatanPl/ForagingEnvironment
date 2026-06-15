@@ -4,12 +4,8 @@ using System.Linq;
 using LevelBasedForaging.Core;
 using LevelBasedForaging.Grpc;
 
-public class ForagingGrpcService : ForagingService.ForagingServiceBase {
-    private readonly ForagingEnvironment _env;
-
-    public ForagingGrpcService(ForagingEnvironment env) {
-        _env = env;
-    }
+public class ForagingGrpcService(ForagingEnvironment env) : ForagingService.ForagingServiceBase {
+    private readonly ForagingEnvironment _env = env;
 
     public override Task<StateMessage> Reset(Empty request, ServerCallContext context) {
         var state = _env.Reset();
@@ -19,19 +15,32 @@ public class ForagingGrpcService : ForagingService.ForagingServiceBase {
     public override Task<StepResponse> Step(ActionRequest request, ServerCallContext context) {
         var actions = request.Actions.Select(a => (AgentAction)a).ToList();
         
-        var stepResult = _env.PerformActions(actions);
+        var (Reward, NextState, Done) = _env.PerformActions(actions);
 
         return Task.FromResult(new StepResponse {
-            Reward = stepResult.Reward,
-            NextState = ConvertToProtoState(stepResult.NextState),
-            Done = _env.Done()
+            Reward = Reward,
+            NextState = ConvertToProtoState(NextState),
+            Done = Done
         });
     }
 
     private StateMessage ConvertToProtoState(State state) {
         var protoState = new StateMessage();
-        protoState.World.AddRange(state.World.Cast<int>());
-        protoState.AgentLocations.AddRange(state.AgentLocations.Select(loc => new Location { X = loc.X, Y = loc.Y }));
+        
+        // Map Agent Locations
+        protoState.AgentLocations.AddRange(
+            state.AgentLocations.Select(loc => new Location { X = loc.X, Y = loc.Y })
+        );
+
+        // Map Object Locations (Entity-Centric)
+        protoState.ObjectLocations.AddRange(
+            state.ObjectLocations.Select(obj => new ObjectLocation { 
+                X = obj.X, 
+                Y = obj.Y, 
+                Level = obj.Level 
+            })
+        );
+
         return protoState;
     }
 }

@@ -5,19 +5,15 @@ using CommandLine;
 using LevelBasedForaging.Core;
 
 namespace Agent {
-    public class ExampleAgent : IAgent {
-        private readonly Random random = new Random();
-        private readonly int agentCount = 0;
-        private readonly int width = 0;
-        private readonly int height = 0;
-        public ExampleAgent(int width, int height, int agentCount) {
-            this.width = width;
-            this.height = height;
-            this.agentCount = agentCount;
-        }
+    public class ExampleAgent(int width, int height, int agentCount) : IAgent {
+        private readonly Random random = new();
+        private readonly int agentCount = agentCount;
+        private readonly int width = width;
+        private readonly int height = height;
+
         public List<AgentAction> GetActions(State observation) {
             int count = agentCount > 0 ? agentCount : observation.AgentLocations.Count;
-            return new List<AgentAction>(new AgentAction[count].Select(_ => (AgentAction)random.Next(0, 4)));
+            return [.. new AgentAction[count].Select(_ => (AgentAction)random.Next(0, 4))];
         }
         public void Reward(double reward) {}
     }
@@ -50,13 +46,15 @@ namespace Agent {
             for (int episode = 0; episode < opts.Episodes; episode++) {
                 var state = env.Reset();
                 double totalReward = 0;
-
-                while (!env.Done()) {
+                
+                bool done = false;
+                while (!done) {
                     var actions = agent.GetActions(state);
                     var stepResult = env.PerformActions(actions);
                     agent.Reward(stepResult.Reward);
                     totalReward += stepResult.Reward;
                     state = stepResult.NextState;
+                    done = stepResult.Done;
                 }
                 Console.WriteLine($"Episode {episode + 1} finished with reward: {totalReward:F2}");
                 totalRewards.Add(totalReward);

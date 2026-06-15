@@ -39,16 +39,17 @@ namespace LevelBasedForaging.Tests {
             var history1 = env1.History.First();
             var history2 = env2.History.First();
 
-            Assert.Equal(history1.World, history2.World);
+            Assert.Equal(history1.State.ObjectLocations, history2.State.ObjectLocations);
             Assert.Equal(history1.Reward, history2.Reward);
 
             var state1 = env1.Reset();
             var state2 = env2.Reset();
 
-            Assert.Equal(state1.World, state2.World);
+            Assert.Equal(state1.ObjectLocations, state2.ObjectLocations);
             Assert.Equal(state1.AgentLocations, state2.AgentLocations);
-            Assert.Equal(env1.agentLocations, env2.agentLocations);
-            Assert.Equal(env1.objectLocations, env2.objectLocations);
+            
+            Assert.True(env1.agentLocations.SequenceEqual(env2.agentLocations));
+            Assert.True(env1.objectLocations.SequenceEqual(env2.objectLocations));
         }
         [Theory]
         [InlineData(2, 1, 1, 1)]
@@ -59,22 +60,9 @@ namespace LevelBasedForaging.Tests {
                 var env = new ForagingEnvironment(height, width, objects, agents);
                 var state = env.Reset();
 
-                // Count objects in the world array (positive numbers)
-                int agentCount = 0;
-                int objectCount = 0;
-
-                for (int i = 0; i < height; i++)
-                {
-                    for (int j = 0; j < width; j++)
-                    {
-                        if (state.World[i, j] == -1) agentCount++;
-                        if (state.World[i, j] > 0) objectCount++;
-                    }
-                }
-                Assert.Equal(agents, agentCount);
-                Assert.Equal(objects, objectCount);
                 Assert.Equal(agents, state.AgentLocations.Count);
-                Assert.Equal(objects, env.objectLocations.Count);
+                Assert.Equal(objects, state.ObjectLocations.Count);
+                Assert.Equal(objects, env.activeObjects);
             }
 
         [Fact]
@@ -83,8 +71,8 @@ namespace LevelBasedForaging.Tests {
             var env = new ForagingEnvironment(1000, 1000, 500, agents);
             env.Reset();
 
-            foreach (var obj in env.objectLocations) {
-                Assert.InRange(obj.Level, 1, agents);
+            for(int i = 0; i < env.activeObjects; i++) {
+                Assert.InRange(env.objectLocations[i].Level, 1, agents);
             }
         }
     
@@ -101,10 +89,10 @@ namespace LevelBasedForaging.Tests {
                 env.Reset();
                 env.agentLocations[0] = (X, Y); // Place agent at the corner
 
-                var result = env.PerformActions(new List<AgentAction> { action });
+                var (_, _, _) = env.PerformActions([action]);
                 var newLocation = env.agentLocations[0];
 
-                Assert.Equal((X, Y), newLocation); // Agent should not move out of bounds
+                Assert.Equal((X, Y), newLocation);  // Agent should not move out of bounds
             }
         
         [Fact]
@@ -113,8 +101,8 @@ namespace LevelBasedForaging.Tests {
             env.agentLocations[0] = (0,0);
             env.objectLocations[0] = (2,2,1); // in the middle so we don't interact with it
 
-            var (reward1, _) = env.PerformActions(new List<AgentAction> { AgentAction.South });
-            var (reward2, _) = env.PerformActions(new List<AgentAction> { AgentAction.North });
+            var (reward1, _, _) = env.PerformActions([AgentAction.South]);
+            var (reward2, _, _) = env.PerformActions([AgentAction.North]);
 
             Assert.Equal(-0.1, reward1);
             Assert.Equal(-0.1, reward2);
@@ -129,7 +117,8 @@ namespace LevelBasedForaging.Tests {
                 env.agentLocations[i] = (0,0);
             }
             env.objectLocations[0] = (0,1, Count);
-            var (reward, _) = env.PerformActions(Enumerable.Repeat(AgentAction.East, Count).ToList());
+            var (reward, _, _) = env.PerformActions([.. Enumerable.Repeat(AgentAction.East, Count)]);
+            
             Assert.Equal(Count - 0.1, reward);
         }
 
@@ -141,7 +130,7 @@ namespace LevelBasedForaging.Tests {
             }
             env.objectLocations[0] = (0,1, 3); // Level 3 object
 
-            var (reward, _) = env.PerformActions(Enumerable.Repeat(AgentAction.East, 5).ToList());
+            var (reward, _, _) = env.PerformActions([.. Enumerable.Repeat(AgentAction.East, 5)]);
             Assert.Equal(3 - 0.1, reward); // Should only get level 3 reward, not level 5
         }
 
@@ -152,7 +141,7 @@ namespace LevelBasedForaging.Tests {
             env.agentLocations[1] = (0,0);
             env.objectLocations[0] = (0,1, 3); // Level 3 object
 
-            var (reward, _) = env.PerformActions(Enumerable.Repeat(AgentAction.East, 2).ToList());
+            var (reward, _, _) = env.PerformActions([.. Enumerable.Repeat(AgentAction.East, 2)]);
             Assert.Equal(-0.1, reward); // Should not get any reward since only 2 agents are present but level 3 is required
         }
 
@@ -164,10 +153,11 @@ namespace LevelBasedForaging.Tests {
             env.objectLocations[0] = (0, 1, 1); // Level 1 object near Agent 1
             env.objectLocations[1] = (4, 3, 1); // Level 1 object near Agent 2
 
-            var (reward, _) = env.PerformActions(new List<AgentAction> { AgentAction.East, AgentAction.West });
+            var (reward, state, _) = env.PerformActions([AgentAction.East, AgentAction.West]);
             
             Assert.Equal(2 - 0.1, reward); // Both level-1 objects collected simultaneously
-            Assert.Empty(env.objectLocations);
+            Assert.Empty(state.ObjectLocations);
+            Assert.Equal(0, env.activeObjects);
         }
 
         [Fact]
@@ -178,7 +168,7 @@ namespace LevelBasedForaging.Tests {
             env.objectLocations[0] = (2,2, 1);
             Assert.False(env.Done());
             for (int i = 0; i < 499; i++) {
-                env.PerformActions(new List<AgentAction> { AgentAction.North });
+                env.PerformActions([AgentAction.North]);
                 Assert.False(env.Done());
             }
             Assert.False(env.Done());
@@ -190,7 +180,7 @@ namespace LevelBasedForaging.Tests {
             env.agentLocations[0] = (0,0);
             env.objectLocations[0] = (2,2, 1);
             for (int i = 0; i < 500; i++) {
-                env.PerformActions(new List<AgentAction> { AgentAction.North });
+                env.PerformActions([AgentAction.North]);
             }
             Assert.True(env.Done());
         }
@@ -202,10 +192,12 @@ namespace LevelBasedForaging.Tests {
             env.objectLocations[0] = (0,1, 1);
             env.objectLocations[1] = (0,2, 1);
             Assert.False(env.Done());
-            var (reward, _) = env.PerformActions(new List<AgentAction> { AgentAction.East });
+            
+            var (reward, _, _) = env.PerformActions([AgentAction.East]);
             Assert.Equal(1 - 0.1, reward); // Collected first object
             Assert.False(env.Done());
-            (reward, _) = env.PerformActions(new List<AgentAction> { AgentAction.East });
+
+            (reward, _, _) = env.PerformActions([AgentAction.East]);
             Assert.Equal(1 - 0.1, reward); // Collected second object
             Assert.True(env.Done());
         }
@@ -214,7 +206,7 @@ namespace LevelBasedForaging.Tests {
         public void HistoryIsCleared() {
             var env = new ForagingEnvironment(5, 5, 1, 1);
             Assert.Single(env.History);
-            env.PerformActions(new List<AgentAction> { AgentAction.North });
+            env.PerformActions([AgentAction.North]);
             Assert.Equal(2, env.History.Count);
             env.ClearHistory();
             Assert.Empty(env.History);
@@ -230,7 +222,7 @@ namespace LevelBasedForaging.Tests {
             env.objectLocations[0] = (2,2, 1);
 
             Assert.Throws<ArgumentException>(() => 
-                env.PerformActions(new List<AgentAction> { AgentAction.East })); // Only 1 action for 2 agents
+                env.PerformActions([AgentAction.East])); // Only 1 action for 2 agents
         }
 
         [Fact]
@@ -240,7 +232,7 @@ namespace LevelBasedForaging.Tests {
             env.objectLocations[0] = (2,2, 1);
 
             Assert.Throws<ArgumentException>(() => 
-                env.PerformActions(new List<AgentAction> { (AgentAction)999 })); // Invalid action
+                env.PerformActions([(AgentAction)999])); // Invalid action
         }
     }
 }

@@ -15,12 +15,11 @@ namespace LevelBasedForaging.Tests {
             int currentStep = 0;
 
             var exception = Record.Exception(() => {
-                while (!env.Done() && currentStep < maxSteps)
-                {
+                while (!env.Done() && currentStep < maxSteps) {
                     var actions = agent.GetActions(state);
-                    var result = env.PerformActions(actions);
-                    agent.Reward(result.Reward);
-                    state = result.NextState;
+                    var (Reward, NextState, Done) = env.PerformActions(actions);
+                    agent.Reward(Reward);
+                    state = NextState;
                     currentStep++;
                 }
             });
